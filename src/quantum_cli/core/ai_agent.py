@@ -46,6 +46,18 @@ class AIAgent:
         self._re_kss     = re.compile(
             r"\b(kss|kovtun|son|starinets|bound|qcd|quark|gluon|plasma)\b"
         )
+        self._re_cyclotron = re.compile(
+            r"\b(cyclotron|accelerator|accelerate|dee|dees|proton\s+beam)\b"
+        )
+        self._re_b_field = re.compile(
+            r"\bb\s*(?:field)?\s*=\s*([-+]?\d*\.?\d+)\b"
+        )
+        self._re_voltage = re.compile(
+            r"\b(?:voltage|v)\s*=\s*(\d*\.?\d+)\s*(k|kv|v)?\b"
+        )
+        self._re_radius  = re.compile(
+            r"\b(?:radius|r)\s*=\s*(\d*\.?\d+)\s*(m|cm)?\b"
+        )
         self._re_n_eq    = re.compile(r"\bn\s*=\s*(\d+)\b")
         self._re_level   = re.compile(r"\blevel\s+(\d+)\b")
         self._re_range   = re.compile(
@@ -115,6 +127,14 @@ class AIAgent:
                 },
             }
 
+        if self._re_cyclotron.search(norm):
+            return {
+                **base,
+                "action":     "cyclotron",
+                "confidence": 0.95,
+                "parameters": self._parse_cyclotron_params(norm),
+            }
+
         return base
 
     def execute(self, parsed: dict[str, Any]) -> dict[str, Any]:
@@ -144,6 +164,9 @@ class AIAgent:
 
         if action == "harmonic_oscillator":
             return self._exec_harmonic_oscillator(params)
+
+        if action == "cyclotron":
+            return self._exec_cyclotron(params)
 
         if action == "kss_bound":
             return self._exec_kss_bound(params)
@@ -240,6 +263,45 @@ class AIAgent:
                     "Ignoring invalid x_range (%.2f, %.2f): min ≥ max.",
                     x_min, x_max,
                 )
+
+        return params
+
+    def _parse_cyclotron_params(self, norm: str) -> dict[str, Any]:
+        """Extract cyclotron accelerator parameters from user query."""
+        params: dict[str, Any] = {
+            "B_field": 1.5,
+            "gap_voltage": 50000.0,
+            "dee_radius": 0.5,
+        }
+
+        # B field in Tesla
+        mb = self._re_b_field.search(norm)
+        if mb:
+            params["B_field"] = max(0.1, float(mb.group(1)))
+
+        # Voltage in V or kV
+        mv = self._re_voltage.search(norm)
+        if mv:
+            val = float(mv.group(1))
+            unit = (mv.group(2) or "").lower()
+            if unit in ("k", "kv"):
+                val *= 1000.0
+            elif val < 500 and not unit:
+                # If user writes voltage=50, infer 50 kV
+                val *= 1000.0
+            params["gap_voltage"] = max(100.0, val)
+
+        # Dee radius in m or cm
+        mr = self._re_radius.search(norm)
+        if mr:
+            val = float(mr.group(1))
+            unit = (mr.group(2) or "").lower()
+            if unit == "cm":
+                val /= 100.0
+            elif val > 5.0 and not unit:
+                # If user writes radius=50 without unit, infer 50 cm
+                val /= 100.0
+            params["dee_radius"] = max(0.05, val)
 
         return params
 
@@ -340,3 +402,39 @@ class AIAgent:
                 "message": f"Computation failed: {exc}",
                 "data":    None,
             }
+
+    def _exec_cyclotron(self, params: dict[str, Any]) -> dict[str, Any]:
+        try:
+            b_field = float(params.get("B_field", 1.5))
+            gap_voltage = float(params.get("gap_voltage", 50000.0))
+            dee_radius = float(params.get("dee_radius", 0.5))
+
+            res = self.physics.cyclotron_simulation(
+                B_field=b_field,
+                gap_voltage=gap_voltage,
+                dee_radius=dee_radius,
+            )
+            msg = (
+                f"Cyclotron Particle Accelerator Simulation:\n"
+                f"  Magnetic Field B : {res['B_field']:.2f} T\n"
+                f"  Gap RF Voltage   : {res['gap_voltage']/1000:.1f} kV\n"
+                f"  Resonance Freq   : {res['cyclotron_frequency_mhz']:.2f} MHz\n"
+                f"  Final Kinetic E  : {res['final_energy_mev']:.3f} MeV\n"
+                f"  Exit Radius      : {res['final_radius_cm']:.1f} cm\n"
+                f"  Turn Count       : ~{res['turns']:.1f} turns ({res['flight_time_us']:.2f} \u03bcs)"
+            )
+            return {"success": True, "message": msg, "data": res}
+        except (TypeError, ValueError) as exc:
+            return {
+                "success": False,
+                "message": f"Parameter error: {exc}",
+                "data": None,
+            }
+        except Exception as exc:
+            logger.exception("Unexpected error computing cyclotron simulation")
+            return {
+                "success": False,
+                "message": f"Computation failed: {exc}",
+                "data": None,
+            }
+
