@@ -667,3 +667,35 @@ class PhysicsEngine:
             result["plot_path"] = str(plot_path)
 
         return result
+
+    def cyclotron_simulation(
+        self,
+        B_field: float = 1.5,
+        gap_voltage: float = 50000.0,
+        dee_radius: float = 0.5,
+        gap_width: float = 0.01,
+    ) -> dict[str, Any]:
+        """
+        Run a cyclotron particle accelerator simulation.
+
+        Parameters
+        ----------
+        B_field     : Magnetic field strength in Tesla.
+        gap_voltage : Peak RF voltage in Volts.
+        dee_radius  : Dee radius in metres.
+        gap_width   : Gap width in metres.
+
+        Returns
+        -------
+        dict with simulation data and observables.
+        """
+        from quantum_cli.core.cyclotron import CyclotronSimulator
+
+        sim = CyclotronSimulator(
+            B_field=B_field,
+            gap_voltage=gap_voltage,
+            dee_radius=dee_radius,
+            gap_width=gap_width,
+        )
+        return sim.simulate()
+
