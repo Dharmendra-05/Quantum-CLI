@@ -86,8 +86,11 @@ Classical turning points $x_{\text{tp}} = \sqrt{2n+1}$ are marked with dashed bo
   <img src="quantum-exports/qho_n3_wavefunction.png" alt="Quantum Harmonic Oscillator n=3 Wavefunction" width="850"/>
 </p>
 
+#### Multi-Eigenstate Potential Well Visualizer
+Generates simultaneous side-by-side plots of wavefunctions $\psi_n(x)$ and probability densities $|\psi_n(x)|^2$ offset vertically by energy $E_n$ on top of the parabolic potential $V(x) = \frac{1}{2}m\omega^2 x^2$:
+
 <p align="center">
-  <img src="quantum-exports/qho_n4_wavefunction.png" alt="Quantum Harmonic Oscillator n=4 Wavefunction" width="850"/>
+  <img src="quantum-exports/qho_multi_eigenstates_0_1_2_3.png" alt="Quantum Harmonic Oscillator Multi-Eigenstate Potential Well" width="850"/>
 </p>
 
 ---
@@ -119,6 +122,8 @@ Quantum-CLI/
 │       ├── cli/                # Terminal layer: Rich UI, banner, tables & spinners
 │       │   ├── main.py         # Entry runner function
 │       │   └── ui.py           # QuantumCLI REPL loop
+│       ├── render/             # Visualization & figure rendering (Matplotlib)
+│       │   └── qho_plot.py     # Dual-panel multi-eigenstate potential-well visualizer
 │       └── core/               # Pure physics & models
 │           ├── physics_engine.py  # QHO & QCD numerical engines
 │           ├── ai_agent.py        # Rule-based natural language intent parser
@@ -143,7 +148,7 @@ uv run --extra dev pytest tests/
 
 Output:
 ```text
-======================== 3 passed, 1 xfailed in 0.88s =========================
+======================== 6 passed, 1 xfailed in 0.94s =========================
 ```
 
 ---

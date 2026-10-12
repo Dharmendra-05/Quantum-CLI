@@ -27,6 +27,7 @@ matplotlib.use("Agg")          # Headless / no-GUI — essential for WSL / serve
 
 import logging
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -166,6 +167,78 @@ class QuantumHarmonicOscillator:
     ) -> npt.NDArray[np.float64]:
         """Probability density  |ψ_n(x)|²  in natural units."""
         return self.wavefunction(n, x) ** 2
+
+    def multi_eigenstates(
+        self,
+        states: list[int] | tuple[int, ...] | None = None,
+        x_range: tuple[float, float] | None = None,
+        num_points: int = 1000,
+    ) -> dict[str, Any]:
+        """
+        Compute wavefunctions, probability densities, energies, and classical
+        turning points for multiple energy eigenstates simultaneously.
+
+        Parameters
+        ----------
+        states     : Sequence of quantum numbers n (0 ≤ n ≤ MAX_N). Defaults to [0, 1, 2, 3].
+        x_range    : Position bounds (x_min, x_max) in natural units. If None,
+                     automatically chosen to comfortably frame the highest turning point.
+        num_points : Grid resolution.
+
+        Returns
+        -------
+        Dictionary containing:
+          - 'x': position grid array (natural units)
+          - 'states': list of dicts with 'n', 'energy', 'energy_nat', 'x_tp', 'psi', 'prob'
+          - 'x_range': (x_min, x_max) used
+        """
+        if states is None:
+            states_list = [0, 1, 2, 3]
+        else:
+            states_list = sorted(list(set(states)))
+
+        if not states_list:
+            raise ValueError("states list must not be empty")
+
+        for n in states_list:
+            self._validate_n(n)
+
+        max_n = max(states_list)
+        max_xtp = self.classical_turning_point(max_n)
+
+        if x_range is None:
+            pad = max(2.5, 0.4 * max_xtp)
+            actual_x_range: tuple[float, float] = (-(max_xtp + pad), max_xtp + pad)
+        else:
+            xlo, xhi = float(x_range[0]), float(x_range[1])
+            if xlo >= xhi:
+                raise ValueError(
+                    f"x_range must satisfy x_min < x_max, got ({xlo}, {xhi})"
+                )
+            actual_x_range = (xlo, xhi)
+
+        x = np.linspace(actual_x_range[0], actual_x_range[1], num_points)
+
+        state_records: list[dict[str, Any]] = []
+        for n in states_list:
+            psi = self.wavefunction(n, x)
+            prob = self.probability_density(n, x)
+            state_records.append(
+                {
+                    "n": n,
+                    "energy": self.energy(n),
+                    "energy_nat": self.energy_natural(n),
+                    "x_tp": self.classical_turning_point(n),
+                    "psi": psi,
+                    "prob": prob,
+                }
+            )
+
+        return {
+            "x": x,
+            "states": state_records,
+            "x_range": actual_x_range,
+        }
 
     # ── Plotting ──────────────────────────────────────────────────────────────
 
@@ -543,6 +616,26 @@ class PhysicsEngine:
             result["plot_path"] = str(plot_path)
 
         return result
+
+    def harmonic_oscillator_multi(
+        self,
+        states: list[int] | tuple[int, ...] | None = None,
+        x_range: tuple[float, float] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Compute multi-eigenstate observables and wavefunctions for a set of energy levels.
+
+        Parameters
+        ----------
+        states  : Sequence of quantum numbers n. Defaults to [0, 1, 2, 3].
+        x_range : (x_min, x_max) in natural units. Auto-computed if None.
+
+        Returns
+        -------
+        Dictionary containing 'x', 'states', and 'x_range'.
+        """
+        return self.qho.multi_eigenstates(states=states, x_range=x_range)
+
 
     def kss_bound(
         self,

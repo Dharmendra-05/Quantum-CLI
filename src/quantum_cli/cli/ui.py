@@ -27,10 +27,9 @@ from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
+from quantum_cli import __version__ as _VERSION
 from quantum_cli.core.ai_agent import AIAgent
 from quantum_cli.core.latex_generator import LaTeXGenerator
-
-from quantum_cli import __version__ as _VERSION
 
 # ── ASCII art banner ───────────────────────────────────────────────────────────
 _BANNER_ART = r"""
@@ -158,6 +157,8 @@ class QuantumCLI:
                 "QHO wavefunction  (0 \u2264 N \u2264 15)\n"
                 "  harmonic oscillator n=N range A to B "
                 "custom x-range in natural units\n"
+                "  harmonic oscillator states N1,N2,... "
+                "multi-eigenstate potential-well plot\n"
                 "  kss bound                            "
                 "KSS universal viscosity bound\n"
                 "  kss bound with sample data           "
@@ -193,6 +194,11 @@ class QuantumCLI:
             " range [italic]A[/italic] to [italic]B[/italic]",
             "Same, with a custom x-range in natural units (x / x₀).",
             "harmonic oscillator n=5 range -8 to 8",
+        )
+        table.add_row(
+            "harmonic oscillator states [italic]N1,N2,...[/italic]",
+            "Multi-eigenstate dual-panel potential-well plot.",
+            "harmonic oscillator states 0,1,2,3",
         )
         table.add_row(
             "kss bound",
@@ -253,6 +259,62 @@ class QuantumCLI:
             Panel(
                 tbl,
                 title="[bold #3fb950]✔  Quantum Harmonic Oscillator[/bold #3fb950]",
+                border_style="#3fb950",
+                padding=(1, 2),
+            )
+        )
+
+    def _display_multi_ho_result(self, data: dict[str, Any]) -> None:
+        """Render multi-eigenstate QHO results in a styled table inside a Panel."""
+        states = data["states"]
+        x_range = data.get("x_range")
+        plot_path = data.get("plot_path")
+
+        if not self.use_rich:
+            print("\n  Quantum Harmonic Oscillator - Multi-Eigenstates:")
+            for s in states:
+                print(
+                    f"    n = {s['n']}: E = {s['energy']:.6e} J ({s['energy_nat']:.1f} hbar*omega), "
+                    f"x_tp = +/-{s['x_tp']:.4f} x_0"
+                )
+            if plot_path:
+                print(f"  Plot : {plot_path}")
+            return
+
+        table = Table(
+            box=box.SIMPLE_HEAVY,
+            header_style="bold #79c0ff",
+            border_style="#30363d",
+            padding=(0, 2),
+        )
+        table.add_column("Level (n)", justify="center", style="bold #58a6ff")
+        table.add_column("Energy (SI)", justify="right", style="bright_white")
+        table.add_column("Energy (nat.)", justify="right", style="#3fb950")
+        table.add_column("Classical Turning Point (±x_tp)", justify="right", style="#d29922")
+
+        for s in states:
+            table.add_row(
+                f"n = {s['n']}",
+                f"{s['energy']:.6e} J",
+                f"{s['energy_nat']:.1f} ħω",
+                f"±{s['x_tp']:.4f} x₀",
+            )
+
+        details = Text()
+        if x_range:
+            details.append(f"Grid range: [{x_range[0]:.2f}, {x_range[1]:.2f}] x₀\n", style="dim")
+        if plot_path:
+            details.append("Dual-panel potential-well plot saved:\n", style="bold #79c0ff")
+            details.append(f"{plot_path}", style="dim underline")
+
+        content = Table.grid(padding=1)
+        content.add_row(table)
+        content.add_row(details)
+
+        self.console.print(
+            Panel(
+                content,
+                title="[bold #3fb950]✔  QHO Multi-Eigenstate Visualizer[/bold #3fb950]",
                 border_style="#3fb950",
                 padding=(1, 2),
             )
@@ -333,8 +395,9 @@ class QuantumCLI:
 
         # ── 3. Execute with spinner ───────────────────────────────────────────
         spinner_label = {
-            "harmonic_oscillator": "[bold cyan]⚛  Solving Schrödinger equation…",
-            "kss_bound":           "[bold yellow]⚛  Computing viscosity bound…",
+            "harmonic_oscillator":       "[bold cyan]⚛  Solving Schrödinger equation…",
+            "harmonic_oscillator_multi": "[bold cyan]⚛  Computing multi-eigenstate wavefunctions…",
+            "kss_bound":                 "[bold yellow]⚛  Computing viscosity bound…",
         }.get(parsed["action"], "[bold cyan]⚛  Processing…")
 
         if self.use_rich:
@@ -352,6 +415,14 @@ class QuantumCLI:
 
             if action == "harmonic_oscillator" and data:
                 self._display_ho_result(data)
+            elif action == "harmonic_oscillator_multi" and data:
+                from quantum_cli.render.qho_plot import plot_multi_eigenstates
+
+                states_str = "_".join(str(s["n"]) for s in data["states"])
+                plot_file = self.export_dir / f"qho_multi_eigenstates_{states_str}.png"
+                plot_multi_eigenstates(data, save_path=plot_file)
+                data["plot_path"] = str(plot_file)
+                self._display_multi_ho_result(data)
             elif action == "kss_bound" and data:
                 self._display_kss_result(data)
             else:
@@ -408,6 +479,12 @@ class QuantumCLI:
                     "harmonic_oscillator",
                     n=data["n"],
                     energy=data["energy"],
+                )
+            if action == "harmonic_oscillator_multi":
+                return self.latex.generate_and_save(
+                    "harmonic_oscillator_multi",
+                    states=[s["n"] for s in data["states"]],
+                    state_records=data["states"],
                 )
             if action == "kss_bound":
                 return self.latex.generate_and_save(

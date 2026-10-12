@@ -7,6 +7,7 @@ Uses SymPy for symbolic expression rendering.
 
 import logging
 from pathlib import Path
+from typing import Any
 
 import sympy as sp
 from sympy import latex as sp_latex
@@ -152,6 +153,43 @@ strongly-coupled quantum fluid near the KSS limit.
 """
         return doc
 
+    def harmonic_oscillator_multi_tex(
+        self, states: list[int], state_records: list[dict[str, Any]]
+    ) -> str:
+        """Full LaTeX document for QHO multiple eigenstates."""
+        doc = self._preamble("Quantum Harmonic Oscillator Multi-Eigenstate Results")
+        doc += r"""
+\begin{document}
+\maketitle
+
+\section{Eigenstate Spectrum Summary}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{cccc}
+\hline
+Quantum Level $n$ & Energy (nat.) & Energy (SI) & Turning Point $\pm x_{\text{tp}}$ \\
+\hline
+"""
+        for s in state_records:
+            doc += rf"{s['n']} & {s['energy_nat']:.1f}\,\hbar\omega & {s['energy']:.6e}\,\text{{J}} & \pm {s['x_tp']:.4f}\,x_0 \\" + "\n"
+
+        doc += r"""\hline
+\end{tabular}
+\end{table}
+
+\section{Analytic Wavefunctions in Dimensionless Coordinates}
+The stationary states of the 1D Quantum Harmonic Oscillator in dimensionless units $\xi = x/x_0$ satisfy:
+\[
+  \psi_n(x) = \frac{1}{\sqrt{\sqrt{\pi}\,2^n\,n!}}\,H_n(x)\,e^{-x^2/2}.
+\]
+where $H_n$ is the physicists' Hermite polynomial of degree $n$, and $x_0 = \sqrt{\hbar/(m\omega)}$.
+
+\end{document}
+"""
+        return doc
+
+
     # ── High-level API ────────────────────────────────────────────────────────
 
     def generate_and_save(self, topic: str, **kwargs) -> Path | None:
@@ -171,6 +209,15 @@ strongly-coupled quantum fluid near the KSS limit.
             n      = int(kwargs.get("n", 0))
             energy = float(kwargs.get("energy", 0.0))
             return self._save_tex(self.harmonic_oscillator_tex(n, energy), f"qho_n{n}")
+
+        if topic == "harmonic_oscillator_multi":
+            states = kwargs.get("states", [0, 1, 2, 3])
+            state_records = kwargs.get("state_records", [])
+            states_tag = "_".join(str(s) for s in states)
+            return self._save_tex(
+                self.harmonic_oscillator_multi_tex(states, state_records),
+                f"qho_multi_eigenstates_{states_tag}",
+            )
 
         if topic == "kss_bound":
             bound = float(kwargs.get("bound_value", 0.0))
