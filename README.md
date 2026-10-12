@@ -25,18 +25,37 @@
 
 ## 🚀 Quick Start
 
-### 1. Run Directly with `uv` (No Manual Setup Needed)
+### 1. Global Installation (via `uv` or `pipx`)
 If you have [`uv`](https://github.com/astral-sh/uv) or [`pipx`](https://pypa.github.io/pipx/) installed, you can launch or install Quantum-CLI globally in one line:
 
 ```bash
+# Using uv (recommended)
 uv tool install git+https://github.com/Dharmendra-05/Quantum-CLI.git
+
+# Or using pipx
+pipx install git+https://github.com/Dharmendra-05/Quantum-CLI.git
 ```
 Then anywhere in your terminal:
 ```bash
 quantum
 ```
 
-### 2. Local Developer Installation
+### 2. Upgrading an Existing Global Installation
+To update Quantum-CLI to the latest version with new physics features and visualizers:
+
+```bash
+# If installed via uv tool:
+uv tool upgrade quantum-origin-cli
+# Or force-reinstall the latest commit from GitHub:
+uv tool install --force git+https://github.com/Dharmendra-05/Quantum-CLI.git
+
+# If installed via pipx:
+pipx upgrade quantum-origin-cli
+# Or force-reinstall the latest commit from GitHub:
+pipx install --force git+https://github.com/Dharmendra-05/Quantum-CLI.git
+```
+
+### 3. Local Developer Installation
 ```bash
 # Clone the repository
 git clone https://github.com/Dharmendra-05/Quantum-CLI.git
