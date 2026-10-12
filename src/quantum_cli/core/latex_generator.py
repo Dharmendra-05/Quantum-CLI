@@ -7,7 +7,6 @@ Uses SymPy for symbolic expression rendering.
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 import sympy as sp
 from sympy import latex as sp_latex
@@ -155,7 +154,7 @@ strongly-coupled quantum fluid near the KSS limit.
 
     # ── High-level API ────────────────────────────────────────────────────────
 
-    def generate_and_save(self, topic: str, **kwargs) -> Optional[Path]:
+    def generate_and_save(self, topic: str, **kwargs) -> Path | None:
         """
         Generate and save a LaTeX document for the given physics topic.
 

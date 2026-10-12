@@ -21,19 +21,20 @@ Gaussian exp(−α²x²/2) to exactly zero for any x > ~10⁻¹⁶ m.
 
 # ── Matplotlib backend MUST be set before pyplot is imported ─────────────────
 import matplotlib
+
 matplotlib.use("Agg")          # Headless / no-GUI — essential for WSL / servers
 # ─────────────────────────────────────────────────────────────────────────────
 
+import logging
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+from matplotlib import ticker
 from scipy import constants
-from scipy.special import hermite as _scipy_hermite
 from scipy.special import factorial
-from pathlib import Path
-import logging
-from typing import Dict, Optional, Tuple, Union
+from scipy.special import hermite as _scipy_hermite
 
 logger = logging.getLogger(__name__)
 
@@ -171,9 +172,9 @@ class QuantumHarmonicOscillator:
     def plot_wavefunction(
         self,
         n: int,
-        x_range: Optional[Tuple[float, float]] = None,
+        x_range: tuple[float, float] | None = None,
         num_points: int = 1200,
-        save_path: Optional[Union[str, Path]] = None,
+        save_path: str | Path | None = None,
     ) -> plt.Figure:
         """
         Two-panel figure: ψ_n(x) (top) and |ψ_n(x)|² (bottom).
@@ -332,7 +333,7 @@ class QCDConcepts:
         T_max_MeV: float = 500.0,
         num_points: int = 25,
         seed: int = 42,
-    ) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """
         Generate illustrative QGP data that sits above the KSS bound.
 
@@ -366,8 +367,8 @@ class QCDConcepts:
 
     def plot_kss_bound(
         self,
-        hypothetical_data: Optional[Tuple[npt.NDArray, npt.NDArray]] = None,
-        save_path: Optional[Union[str, Path]] = None,
+        hypothetical_data: tuple[npt.NDArray, npt.NDArray] | None = None,
+        save_path: str | Path | None = None,
     ) -> plt.Figure:
         """
         Plot the KSS bound as a horizontal line with the forbidden region shaded.
@@ -485,9 +486,9 @@ class PhysicsEngine:
     def harmonic_oscillator_wavefunction(
         self,
         n: int,
-        x_range: Optional[Tuple[float, float]] = None,
+        x_range: tuple[float, float] | None = None,
         save_plot: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """
         Compute QHO wavefunction for level n and optionally save a plot.
 
@@ -523,11 +524,11 @@ class PhysicsEngine:
         # Resolve the actual x_range used (for reporting back to caller)
         if x_range is None:
             pad = max(2.5, 0.4 * x_tp)
-            x_range_actual: Tuple[float, float] = (-(x_tp + pad), x_tp + pad)
+            x_range_actual: tuple[float, float] = (-(x_tp + pad), x_tp + pad)
         else:
             x_range_actual = (float(x_range[0]), float(x_range[1]))
 
-        result: Dict = {
+        result: dict = {
             "n":          n,
             "energy":     energy,
             "energy_nat": energy_nat,
@@ -547,7 +548,7 @@ class PhysicsEngine:
         self,
         generate_sample_data: bool = True,
         save_plot: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """
         Compute the KSS bound value and optionally save an illustrative plot.
 
@@ -561,7 +562,7 @@ class PhysicsEngine:
         {'bound_value': float  (K·s),  'plot_path': str | None}
         """
         bound_value = self.qcd.kss_bound_value()
-        result: Dict = {"bound_value": bound_value, "plot_path": None}
+        result: dict = {"bound_value": bound_value, "plot_path": None}
 
         if save_plot:
             hyp_data = (

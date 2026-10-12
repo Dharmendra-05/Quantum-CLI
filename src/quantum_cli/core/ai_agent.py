@@ -6,11 +6,11 @@ PhysicsEngine method calls.  Uses pre-compiled regex patterns for speed
 and validates all numeric parameters before dispatching to the engine.
 """
 
-import re
 import logging
-from typing import Any, Dict, Optional
+import re
+from typing import Any
 
-from core.physics_engine import PhysicsEngine, QuantumHarmonicOscillator
+from quantum_cli.core.physics_engine import PhysicsEngine, QuantumHarmonicOscillator
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class AIAgent:
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
-    def parse(self, user_input: str) -> Dict[str, Any]:
+    def parse(self, user_input: str) -> dict[str, Any]:
         """
         Tokenise and classify raw user input into a structured command.
 
@@ -70,7 +70,7 @@ class AIAgent:
         self.command_history.append(text)
         norm = re.sub(r"\s+", " ", text.lower())
 
-        base: Dict[str, Any] = {
+        base: dict[str, Any] = {
             "action":         "unknown",
             "parameters":     {},
             "confidence":     0.0,
@@ -103,7 +103,7 @@ class AIAgent:
 
         return base
 
-    def execute(self, parsed: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, parsed: dict[str, Any]) -> dict[str, Any]:
         """
         Execute the parsed command and return a result dict.
 
@@ -144,14 +144,14 @@ class AIAgent:
 
     # ── Private: parameter parsing ─────────────────────────────────────────────
 
-    def _parse_ho_params(self, norm: str) -> Dict[str, Any]:
+    def _parse_ho_params(self, norm: str) -> dict[str, Any]:
         """
         Extract QHO parameters from the normalised input string.
 
         n       : defaults to 0 if not specified; clamped to MAX_N.
         x_range : None (let the engine auto-compute) unless user specifies one.
         """
-        params: Dict[str, Any] = {"n": 0, "x_range": None}
+        params: dict[str, Any] = {"n": 0, "x_range": None}
 
         # Extract quantum number n
         m = self._re_n_eq.search(norm) or self._re_level.search(norm)
@@ -181,7 +181,7 @@ class AIAgent:
 
     # ── Private: execution helpers ─────────────────────────────────────────────
 
-    def _exec_harmonic_oscillator(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _exec_harmonic_oscillator(self, params: dict[str, Any]) -> dict[str, Any]:
         try:
             n       = params.get("n", 0)
             x_range = params.get("x_range", None)   # None → engine auto-computes
@@ -213,7 +213,7 @@ class AIAgent:
                 "data":    None,
             }
 
-    def _exec_kss_bound(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _exec_kss_bound(self, params: dict[str, Any]) -> dict[str, Any]:
         try:
             sample = bool(params.get("sample_data", False))
             result = self.physics.kss_bound(

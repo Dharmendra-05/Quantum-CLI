@@ -1,5 +1,5 @@
 import pytest
-from core.physics_engine import QuantumHarmonicOscillator, QCDConcepts
+from quantum_cli.core.physics_engine import QuantumHarmonicOscillator, QCDConcepts
 
 def test_qho_energy_level_natural_and_si():
     qho = QuantumHarmonicOscillator()

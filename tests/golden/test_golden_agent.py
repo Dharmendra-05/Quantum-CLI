@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
-from core.physics_engine import PhysicsEngine
-from core.ai_agent import AIAgent
+from quantum_cli.core.physics_engine import PhysicsEngine
+from quantum_cli.core.ai_agent import AIAgent
 
 @pytest.fixture
 def agent(tmp_path: Path):

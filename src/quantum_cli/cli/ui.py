@@ -16,19 +16,19 @@ Design highlights
 import re
 import traceback
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
+from rich import box
+from rich.align import Align
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.prompt import Prompt
 from rich.rule import Rule
+from rich.table import Table
 from rich.text import Text
-from rich.align import Align
-from rich import box
 
-from core.ai_agent import AIAgent
-from core.latex_generator import LaTeXGenerator
+from quantum_cli.core.ai_agent import AIAgent
+from quantum_cli.core.latex_generator import LaTeXGenerator
 
 _VERSION = "1.0.0"
 
@@ -213,7 +213,7 @@ class QuantumCLI:
 
     # ── Result display panels ──────────────────────────────────────────────────
 
-    def _display_ho_result(self, data: Dict[str, Any]) -> None:
+    def _display_ho_result(self, data: dict[str, Any]) -> None:
         """Render QHO results in a colour-coded Panel with a data Table."""
         n          = data["n"]
         energy     = data["energy"]
@@ -258,7 +258,7 @@ class QuantumCLI:
             )
         )
 
-    def _display_kss_result(self, data: Dict[str, Any]) -> None:
+    def _display_kss_result(self, data: dict[str, Any]) -> None:
         """Render KSS bound results in a colour-coded Panel with a data Table."""
         bound     = data["bound_value"]
         plot_path = data.get("plot_path")
@@ -370,7 +370,7 @@ class QuantumCLI:
 
     # ── LaTeX export ───────────────────────────────────────────────────────────
 
-    def _offer_latex(self, action: str, data: Dict[str, Any]) -> None:
+    def _offer_latex(self, action: str, data: dict[str, Any]) -> None:
         """Prompt the user and, if confirmed, generate a .tex file."""
         if not self.use_rich:
             resp = input("\nGenerate LaTeX report? [y/N]: ").strip().lower()
@@ -399,8 +399,8 @@ class QuantumCLI:
             )
 
     def _run_latex_generation(
-        self, action: str, data: Dict[str, Any]
-    ) -> Optional[Path]:
+        self, action: str, data: dict[str, Any]
+    ) -> Path | None:
         """Call the LaTeX generator and return the saved path (or None on error)."""
         try:
             if action == "harmonic_oscillator":
