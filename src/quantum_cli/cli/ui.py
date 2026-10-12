@@ -364,15 +364,16 @@ class QuantumCLI:
     def _display_cyclotron_result(self, data: dict[str, Any]) -> None:
         """Render cyclotron simulation results in a colour-coded Panel with a data Table."""
         particle = data.get("particle", "proton")
-        b_field_t = data.get("b_field_t", 1.5)
-        dee_voltage_v = data.get("dee_voltage_v", 50000.0)
-        f_c_mhz = data.get("f_cyclotron_mhz", 0.0)
-        omega_c_mrad = data.get("omega_cyclotron_mrad_s", 0.0)
-        final_energy_mev = data.get("final_kinetic_energy_mev", 0.0)
-        exit_radius_cm = data.get("exit_radius_cm", 0.0)
-        max_radius_m = data.get("max_radius_m", 0.5)
-        total_turns = data.get("total_turns", 0)
-        t_final_us = data.get("t_final_us", 0.0)
+        b_field_t = data.get("B_field", 1.5)
+        dee_voltage_v = data.get("gap_voltage", 50000.0)
+        f_c_mhz = data.get("cyclotron_frequency_mhz", 0.0)
+        omega_c = data.get("omega_c", 0.0)
+        omega_c_mrad = (omega_c / 1e6) if omega_c > 1000 else omega_c
+        final_energy_mev = data.get("final_energy_mev", 0.0)
+        exit_radius_cm = data.get("final_radius_cm", 0.0)
+        max_radius_m = data.get("dee_radius", 0.5)
+        turns = data.get("turns", 0.0)
+        t_final_us = data.get("flight_time_us", 0.0)
         plot_path = data.get("plot_path")
 
         if not self.use_rich:
@@ -383,7 +384,7 @@ class QuantumCLI:
             print(f"    Resonance Freq   : {f_c_mhz:.3f} MHz (omega = {omega_c_mrad:.3f} Mrad/s)")
             print(f"    Final Energy     : {final_energy_mev:.3f} MeV")
             print(f"    Exit Radius      : {exit_radius_cm:.2f} cm (Dee max: {max_radius_m * 100:.1f} cm)")
-            print(f"    Turns / Duration : {total_turns} turns ({t_final_us:.2f} us)")
+            print(f"    Turns / Duration : ~{turns:.1f} turns ({t_final_us:.2f} us)")
             if plot_path:
                 print(f"    Plot             : {plot_path}")
             return
@@ -401,7 +402,7 @@ class QuantumCLI:
         tbl.add_row("Resonance frequency (f_c)", f"{f_c_mhz:.3f} MHz  [dim](ω_c = {omega_c_mrad:.3f} Mrad/s)[/dim]")
         tbl.add_row("Final kinetic energy (E_k)", f"{final_energy_mev:.3f} MeV")
         tbl.add_row("Exit radius / Dee radius", f"{exit_radius_cm:.2f} cm / {max_radius_m * 100:.1f} cm")
-        tbl.add_row("Completed revolutions", f"{total_turns} turns  [dim](elapsed {t_final_us:.2f} µs)[/dim]")
+        tbl.add_row("Completed revolutions", f"~{turns:.1f} turns  [dim](elapsed {t_final_us:.2f} µs)[/dim]")
         if plot_path:
             tbl.add_row("Plot saved", f"[dim]{plot_path}[/dim]")
 
@@ -560,19 +561,7 @@ class QuantumCLI:
                     bound_value=data["bound_value"],
                 )
             if action == "cyclotron":
-                return self.latex.generate_and_save(
-                    "cyclotron",
-                    b_field_t=data["b_field_t"],
-                    dee_voltage_v=data["dee_voltage_v"],
-                    max_radius_m=data["max_radius_m"],
-                    particle=data["particle"],
-                    f_cyclotron_mhz=data["f_cyclotron_mhz"],
-                    omega_cyclotron_mrad_s=data["omega_cyclotron_mrad_s"],
-                    final_kinetic_energy_mev=data["final_kinetic_energy_mev"],
-                    exit_radius_cm=data["exit_radius_cm"],
-                    total_turns=data["total_turns"],
-                    t_final_us=data["t_final_us"],
-                )
+                return self.latex.generate_and_save("cyclotron", **data)
         except Exception as exc:
             self._display_error(f"LaTeX generation failed: {exc}")
         return None
