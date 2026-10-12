@@ -1,0 +1,1 @@
+# Golden characterization tests package
