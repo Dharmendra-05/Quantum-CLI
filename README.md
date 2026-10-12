@@ -353,8 +353,8 @@ Optional but recommended:
 **1. Clone the repository**
 
 ```bash
-git clone https://github.com/your-username/quantum-cli-toolkit.git
-cd quantum-cli-toolkit
+git clone https://github.com/Dharmendra-05/Quantum-CLI-v2.git
+cd Quantum-CLI-v2
 ```
 
 **2. Create a virtual environment** (strongly recommended)
