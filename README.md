@@ -66,6 +66,7 @@ Quantum-CLI features a rule-based AI parser that interprets both structured flag
 | `qho n=N range A to B` | Computes wavefunction over a custom domain in natural units ($x/x_0$). | `harmonic oscillator n=5 range -8 to 8` |
 | `kss bound` | Calculates the universal lower viscosity bound $\eta/s \ge \hbar/(4\pi k_B)$. | `show kss bound` |
 | `kss bound with sample data` | Overlays illustrative Quark-Gluon Plasma (QGP) data on the plot. | `kss bound with sample data` |
+| `cyclotron [B=..] [voltage=..] [radius=..]` | Integrates Lorentz force equations across RF Dees using DOP853 ODE solver. | `cyclotron B=1.5 voltage=60kV radius=60cm` |
 | `help` | Displays the interactive commands and syntax guide. | `help` |
 | `exit` | Exits the interactive REPL session. | `exit` |
 
@@ -106,6 +107,19 @@ $$\frac{\eta}{s} \ge \frac{\hbar}{4\pi k_B} \approx 6.0794 \times 10^{-13}\,\tex
 
 ---
 
+### 3. Particle Accelerators — Cyclotron Trajectory & Energy Gain
+Integrates Lorentz force equations for charged particles in oscillating radiofrequency (RF) electric fields across Dee gaps and perpendicular uniform magnetic fields using SciPy's high-order Dormand–Prince adaptive ODE solver (`DOP853`):
+
+$$\mathbf{F} = q\left(\mathbf{E}(\mathbf{x}, t) + \mathbf{v} \times \mathbf{B}\right), \quad f_c = \frac{q B}{2\pi m}$$
+
+Computes orbital resonance frequencies, kinetic energy growth per Dee traversal, and spiral exit radii:
+
+<p align="center">
+  <img src="assets/cyclotron_preview.png" alt="Cyclotron Particle Accelerator Trajectory and Energy Gain" width="850"/>
+</p>
+
+---
+
 ## 🏗️ Architecture
 
 Quantum-CLI enforces clean layer separation and lazy module loading:
@@ -123,9 +137,11 @@ Quantum-CLI/
 │       │   ├── main.py         # Entry runner function
 │       │   └── ui.py           # QuantumCLI REPL loop
 │       ├── render/             # Visualization & figure rendering (Matplotlib)
-│       │   └── qho_plot.py     # Dual-panel multi-eigenstate potential-well visualizer
+│       │   ├── qho_plot.py     # Dual-panel multi-eigenstate potential-well visualizer
+│       │   └── cyclotron_plot.py # Dual-panel cyclotron trajectory & energy profile
 │       └── core/               # Pure physics & models
-│           ├── physics_engine.py  # QHO & QCD numerical engines
+│           ├── cyclotron.py       # Pure Lorentz force ODE accelerator (DOP853)
+│           ├── physics_engine.py  # QHO, QCD & Cyclotron numerical facade
 │           ├── ai_agent.py        # Rule-based natural language intent parser
 │           └── latex_generator.py # Standalone .tex report generator
 ├── tests/
@@ -148,7 +164,7 @@ uv run --extra dev pytest tests/
 
 Output:
 ```text
-======================== 6 passed, 1 xfailed in 0.94s =========================
+======================== 9 passed, 1 xfailed in 2.73s =========================
 ```
 
 ---
