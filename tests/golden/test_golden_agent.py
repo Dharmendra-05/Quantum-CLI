@@ -31,3 +31,20 @@ def test_parse_lone_question_mark_help(agent):
     parsed = agent.parse("?")
     assert parsed["action"] == "help"
 
+
+def test_parse_cyclotron_parameters(agent):
+    parsed = agent.parse("cyclotron B=1.8 voltage=60kV radius=60cm")
+    assert parsed["action"] == "cyclotron"
+    assert pytest.approx(1.8) == parsed["parameters"]["B_field"]
+    assert pytest.approx(60000.0) == parsed["parameters"]["gap_voltage"]
+    assert pytest.approx(0.6) == parsed["parameters"]["dee_radius"]
+
+
+def test_execute_cyclotron(agent):
+    parsed = agent.parse("simulate cyclotron B=1.5 voltage=50kV radius=0.5m")
+    result = agent.execute(parsed)
+    assert result["success"] is True
+    assert "data" in result
+    assert result["data"]["final_energy_mev"] > 2.0
+
+
