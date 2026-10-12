@@ -190,6 +190,62 @@ where $H_n$ is the physicists' Hermite polynomial of degree $n$, and $x_0 = \sqr
         return doc
 
 
+    def cyclotron_tex(self, data: dict[str, Any]) -> str:
+        """Full LaTeX document for Cyclotron Particle Accelerator simulation."""
+        b_field = data.get("B_field", 1.5)
+        gap_voltage = data.get("gap_voltage", 50000.0)
+        dee_radius_cm = data.get("dee_radius", 0.5) * 100.0
+        freq_mhz = data.get("cyclotron_frequency_mhz", 22.87)
+        final_ke = data.get("final_energy_mev", 2.194)
+        final_r = data.get("final_radius_cm", 14.0)
+        turns = data.get("turns", 22.9)
+        flight_time_us = data.get("flight_time_us", 1.0)
+
+        doc = self._preamble("Cyclotron Particle Accelerator Simulation Results")
+        doc += rf"""
+\begin{{document}}
+\maketitle
+
+\section{{Accelerator Configuration}}
+
+\begin{{table}}[h!]
+\centering
+\begin{{tabular}}{{ll}}
+\hline
+\textbf{{Parameter}} & \textbf{{Value}} \\
+\hline
+Magnetic Field $B$ & {b_field:.2f}~\mathrm{{T}} \\
+RF Gap Voltage $V_{{\mathrm{{gap}}}}$ & {gap_voltage/1000:.1f}~\mathrm{{kV}} \\
+Dee Radius $R_{{\mathrm{{dee}}}}$ & {dee_radius_cm:.1f}~\mathrm{{cm}} \\
+Cyclotron Resonance Frequency $f_c$ & {freq_mhz:.2f}~\mathrm{{MHz}} \\
+\hline
+\end{{tabular}}
+\end{{table}}
+
+\section{{Governing Dynamics}}
+The motion of the accelerated ion is governed by the Lorentz force:
+\[
+  \mathbf{{F}} = q\left(\mathbf{{E}}(\mathbf{{x}}, t) + \mathbf{{v}} \times \mathbf{{B}}\right).
+\]
+In the constant magnetic field $\mathbf{{B}} = B\,\hat{{\mathbf{{z}}}}$, the orbital resonance frequency is:
+\[
+  \omega_c = \frac{{qB}}{{m}}, \quad f_c = \frac{{\omega_c}}{{2\pi}}.
+\]
+
+\section{{Simulation Results}}
+
+\begin{{itemize}}
+  \item \textbf{{Final Kinetic Energy:}} ${final_ke:.3f}~\mathrm{{MeV}}$
+  \item \textbf{{Exit Orbital Radius:}} ${final_r:.1f}~\mathrm{{cm}}$
+  \item \textbf{{Total Turns Completed:}} $\sim {turns:.1f}$
+  \item \textbf{{Total Flight Time:}} ${flight_time_us:.2f}~\mu\mathrm{{s}}$
+\end{{itemize}}
+
+\end{{document}}
+"""
+        return doc
+
+
     # ── High-level API ────────────────────────────────────────────────────────
 
     def generate_and_save(self, topic: str, **kwargs) -> Path | None:
@@ -198,7 +254,7 @@ where $H_n$ is the physicists' Hermite polynomial of degree $n$, and $x_0 = \sqr
 
         Parameters
         ----------
-        topic    : 'harmonic_oscillator' or 'kss_bound'.
+        topic    : 'harmonic_oscillator', 'harmonic_oscillator_multi', 'cyclotron', or 'kss_bound'.
         **kwargs : Topic-specific keyword arguments.
 
         Returns
@@ -219,9 +275,13 @@ where $H_n$ is the physicists' Hermite polynomial of degree $n$, and $x_0 = \sqr
                 f"qho_multi_eigenstates_{states_tag}",
             )
 
+        if topic == "cyclotron":
+            return self._save_tex(self.cyclotron_tex(kwargs), "cyclotron_simulation")
+
         if topic == "kss_bound":
             bound = float(kwargs.get("bound_value", 0.0))
             return self._save_tex(self.kss_bound_tex(bound), "kss_bound")
 
         logger.warning("Unknown LaTeX topic: %r", topic)
         return None
+
