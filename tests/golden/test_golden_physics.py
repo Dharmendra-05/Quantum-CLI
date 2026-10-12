@@ -29,3 +29,28 @@ def test_qho_multi_eigenstates():
         assert len(s["psi"]) == 100
         assert len(s["prob"]) == 100
 
+
+def test_cyclotron_resonance_and_energy(tmp_path):
+    from quantum_cli.core.physics_engine import PhysicsEngine
+
+    engine = PhysicsEngine(export_dir=tmp_path)
+    data = engine.cyclotron_simulation(
+        B_field=1.5,
+        gap_voltage=50000.0,
+        dee_radius=0.5,
+    )
+
+    # Resonance frequency for proton in 1.5 T field:
+    # f_c = q*B / (2*pi*m) ≈ 1.602176634e-19 * 1.5 / (2 * pi * 1.67262192369e-27) ≈ 22.868 MHz
+    assert pytest.approx(22.868, rel=1e-3) == data["cyclotron_frequency_mhz"]
+    assert pytest.approx(143.682e6, rel=1e-3) == data["omega_c"]
+
+    # Particles should accelerate to ~2.19 MeV over ~22-23 turns
+    assert data["final_energy_mev"] > 2.0
+    assert pytest.approx(2.194, rel=0.05) == data["final_energy_mev"]
+    assert data["turns"] >= 20
+    assert len(data["trajectory"][0]) > 100
+    assert len(data["energy_mev"]) == len(data["t"])
+
+
+
