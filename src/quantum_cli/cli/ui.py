@@ -30,7 +30,7 @@ from rich.text import Text
 from quantum_cli.core.ai_agent import AIAgent
 from quantum_cli.core.latex_generator import LaTeXGenerator
 
-_VERSION = "1.0.0"
+from quantum_cli import __version__ as _VERSION
 
 # ── ASCII art banner ───────────────────────────────────────────────────────────
 _BANNER_ART = r"""
