@@ -163,6 +163,8 @@ class QuantumCLI:
                 "KSS universal viscosity bound\n"
                 "  kss bound with sample data           "
                 "same + hypothetical QGP data\n"
+                "  cyclotron [B=..] [voltage=..] [radius=..] "
+                "Lorentz force particle accelerator\n"
                 "  help                                 "
                 "this message\n"
                 "  exit / quit                          "
@@ -209,6 +211,11 @@ class QuantumCLI:
             "kss bound with sample data",
             "Same, overlaying illustrative QGP data on the plot.",
             "kss bound with sample data",
+        )
+        table.add_row(
+            "cyclotron [italic]B=1.5 voltage=50kV radius=0.5m[/italic]",
+            "DOP853 Lorentz force simulation & dual-panel orbit plot.",
+            "cyclotron B=1.5 voltage=60kV radius=60cm",
         )
         table.add_row("help",  "Display this help table.",  "help")
         table.add_row("exit",  "Exit the application.",     "exit")
@@ -354,6 +361,59 @@ class QuantumCLI:
             )
         )
 
+    def _display_cyclotron_result(self, data: dict[str, Any]) -> None:
+        """Render cyclotron simulation results in a colour-coded Panel with a data Table."""
+        particle = data.get("particle", "proton")
+        b_field_t = data.get("b_field_t", 1.5)
+        dee_voltage_v = data.get("dee_voltage_v", 50000.0)
+        f_c_mhz = data.get("f_cyclotron_mhz", 0.0)
+        omega_c_mrad = data.get("omega_cyclotron_mrad_s", 0.0)
+        final_energy_mev = data.get("final_kinetic_energy_mev", 0.0)
+        exit_radius_cm = data.get("exit_radius_cm", 0.0)
+        max_radius_m = data.get("max_radius_m", 0.5)
+        total_turns = data.get("total_turns", 0)
+        t_final_us = data.get("t_final_us", 0.0)
+        plot_path = data.get("plot_path")
+
+        if not self.use_rich:
+            print("\n  Cyclotron Particle Accelerator Simulation:")
+            print(f"    Particle         : {str(particle).capitalize()}")
+            print(f"    Magnetic Field B : {b_field_t:.3f} T")
+            print(f"    Dee Voltage V_0  : {dee_voltage_v / 1e3:.1f} kV")
+            print(f"    Resonance Freq   : {f_c_mhz:.3f} MHz (omega = {omega_c_mrad:.3f} Mrad/s)")
+            print(f"    Final Energy     : {final_energy_mev:.3f} MeV")
+            print(f"    Exit Radius      : {exit_radius_cm:.2f} cm (Dee max: {max_radius_m * 100:.1f} cm)")
+            print(f"    Turns / Duration : {total_turns} turns ({t_final_us:.2f} us)")
+            if plot_path:
+                print(f"    Plot             : {plot_path}")
+            return
+
+        tbl = Table(
+            show_header=False, box=box.SIMPLE,
+            padding=(0, 2), show_edge=False,
+        )
+        tbl.add_column("Key", style="bold #79c0ff", no_wrap=True)
+        tbl.add_column("Value", style="bright_white")
+
+        tbl.add_row("Accelerated particle", str(particle).capitalize())
+        tbl.add_row("Magnetic field (B)", f"{b_field_t:.3f} T")
+        tbl.add_row("Peak Dee voltage (V₀)", f"{dee_voltage_v / 1e3:.1f} kV")
+        tbl.add_row("Resonance frequency (f_c)", f"{f_c_mhz:.3f} MHz  [dim](ω_c = {omega_c_mrad:.3f} Mrad/s)[/dim]")
+        tbl.add_row("Final kinetic energy (E_k)", f"{final_energy_mev:.3f} MeV")
+        tbl.add_row("Exit radius / Dee radius", f"{exit_radius_cm:.2f} cm / {max_radius_m * 100:.1f} cm")
+        tbl.add_row("Completed revolutions", f"{total_turns} turns  [dim](elapsed {t_final_us:.2f} µs)[/dim]")
+        if plot_path:
+            tbl.add_row("Plot saved", f"[dim]{plot_path}[/dim]")
+
+        self.console.print(
+            Panel(
+                tbl,
+                title="[bold #3fb950]✔  Cyclotron Particle Accelerator[/bold #3fb950]",
+                border_style="#3fb950",
+                padding=(1, 2),
+            )
+        )
+
     def _display_error(self, message: str) -> None:
         """Render an error in a red Panel (or plain text in --no-rich mode)."""
         if not self.use_rich:
@@ -398,6 +458,7 @@ class QuantumCLI:
             "harmonic_oscillator":       "[bold cyan]⚛  Solving Schrödinger equation…",
             "harmonic_oscillator_multi": "[bold cyan]⚛  Computing multi-eigenstate wavefunctions…",
             "kss_bound":                 "[bold yellow]⚛  Computing viscosity bound…",
+            "cyclotron":                 "[bold cyan]⚛  Simulating particle acceleration (DOP853)…",
         }.get(parsed["action"], "[bold cyan]⚛  Processing…")
 
         if self.use_rich:
@@ -425,6 +486,13 @@ class QuantumCLI:
                 self._display_multi_ho_result(data)
             elif action == "kss_bound" and data:
                 self._display_kss_result(data)
+            elif action == "cyclotron" and data:
+                from quantum_cli.render.cyclotron_plot import plot_cyclotron_trajectory
+
+                plot_file = self.export_dir / "cyclotron_trajectory.png"
+                plot_cyclotron_trajectory(data, save_path=plot_file)
+                data["plot_path"] = str(plot_file)
+                self._display_cyclotron_result(data)
             else:
                 # Fallback for any success without structured data
                 self._print(
@@ -490,6 +558,20 @@ class QuantumCLI:
                 return self.latex.generate_and_save(
                     "kss_bound",
                     bound_value=data["bound_value"],
+                )
+            if action == "cyclotron":
+                return self.latex.generate_and_save(
+                    "cyclotron",
+                    b_field_t=data["b_field_t"],
+                    dee_voltage_v=data["dee_voltage_v"],
+                    max_radius_m=data["max_radius_m"],
+                    particle=data["particle"],
+                    f_cyclotron_mhz=data["f_cyclotron_mhz"],
+                    omega_cyclotron_mrad_s=data["omega_cyclotron_mrad_s"],
+                    final_kinetic_energy_mev=data["final_kinetic_energy_mev"],
+                    exit_radius_cm=data["exit_radius_cm"],
+                    total_turns=data["total_turns"],
+                    t_final_us=data["t_final_us"],
                 )
         except Exception as exc:
             self._display_error(f"LaTeX generation failed: {exc}")
