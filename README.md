@@ -1,18 +1,8 @@
 <div align="center">
 
-```
-   ██████  ██    ██  █████  ███    ██ ████████ ██    ██ ███    ███
-  ██    ██ ██    ██ ██   ██ ████   ██    ██    ██    ██ ████  ████
-  ██    ██ ██    ██ ███████ ██ ██  ██    ██    ██    ██ ██ ████ ██
-  ██ ▄▄ ██ ██    ██ ██   ██ ██  ██ ██    ██    ██    ██ ██  ██  ██
-   ██████   ██████  ██   ██ ██   ████    ██     ██████  ██      ██
-      ▀▀
-   ██████ ██      ██
-  ██      ██      ██
-  ██      ██      ██
-  ██      ██      ██
-   ██████ ███████ ██
-```
+<p align="center">
+  <img src="assets/quantum_banner.png" alt="Quantum-CLI Header Banner" width="800"/>
+</p>
 
 # ⚛️ Quantum-CLI
 
@@ -24,10 +14,6 @@
 [![UI: Rich](https://img.shields.io/badge/UI-Rich%20Terminal-blueviolet?style=flat-square)](https://github.com/Textualize/rich)
 [![Physics: NumPy | SciPy](https://img.shields.io/badge/Physics-NumPy%20%7C%20SciPy-0C55A5?style=flat-square)](https://scipy.org/)
 [![CAS: SymPy](https://img.shields.io/badge/CAS-SymPy-3B5526?style=flat-square)](https://www.sympy.org/)
-
-<p align="center">
-  <img src="assets/terminal_preview.png" alt="Quantum-CLI Interactive Terminal REPL" width="850"/>
-</p>
 
 > *"Where the terminal meets the quantum."*
 >
@@ -70,11 +56,15 @@ uv run quantum
 
 Quantum-CLI features a rule-based AI parser that interprets both structured flags and natural English instructions:
 
+<p align="center">
+  <img src="assets/commands_table.png" alt="Quantum-CLI Available Commands Table" width="850"/>
+</p>
+
 | Command | Description | Example |
 |---|---|---|
 | `harmonic oscillator n=N` | Computes $\psi_n(x)$ and $\|\psi_n(x)\|^2$ for level $N$ ($0 \le N \le 15$). | `harmonic oscillator n=3` |
-| `qho n=N range A to B` | Computes wavefunction over a custom domain in natural units ($x/x_0$). | `qho n=4 range -5 to 5` |
-| `kss bound` | Calculates the universal lower viscosity bound $\eta/s \ge \hbar/(4\pi k_B)$. | `kss bound` |
+| `qho n=N range A to B` | Computes wavefunction over a custom domain in natural units ($x/x_0$). | `harmonic oscillator n=5 range -8 to 8` |
+| `kss bound` | Calculates the universal lower viscosity bound $\eta/s \ge \hbar/(4\pi k_B)$. | `show kss bound` |
 | `kss bound with sample data` | Overlays illustrative Quark-Gluon Plasma (QGP) data on the plot. | `kss bound with sample data` |
 | `help` | Displays the interactive commands and syntax guide. | `help` |
 | `exit` | Exits the interactive REPL session. | `exit` |
@@ -153,7 +143,7 @@ uv run --extra dev pytest tests/
 
 Output:
 ```text
-======================== 3 passed, 1 xfailed in 1.12s =========================
+======================== 3 passed, 1 xfailed in 0.88s =========================
 ```
 
 ---
