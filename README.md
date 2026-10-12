@@ -1,6 +1,13 @@
 # ⚛️ Quantum-CLI Toolkit
 ### A Terminal-Based, AI-Integrated Computational Physics Engine
 
+> [!IMPORTANT]
+> **Repository Archived & Superseded**  
+> This version (`Quantum-CLI-Toolkit` v1) is archived and superseded by **[Quantum-CLI-v2](https://github.com/Dharmendra-05/Quantum-CLI-v2)** (future `Quantum-CLI`).  
+> All active development, plugin architecture, enhanced precision algorithms, and multi-user packaging happen in the new repository.  
+> 
+> *The full git commit history of this repository has been permanently preserved in the `legacy/v1-toolkit` branch of Quantum-CLI-v2.*
+
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
   <img src="https://img.shields.io/badge/SciPy-1.17-8CAAE6?style=for-the-badge&logo=scipy&logoColor=white"/>
