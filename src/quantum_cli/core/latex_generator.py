@@ -15,9 +15,19 @@ from sympy import latex as sp_latex
 logger = logging.getLogger(__name__)
 
 
+def _format_sci_latex(val: float, precision: int = 6) -> str:
+    """Format a floating-point number in standard LaTeX scientific notation (e.g. 1.23 \times 10^{-4})."""
+    s = f"{val:.{precision}e}"
+    base, exp = s.split("e")
+    exp_int = int(exp)
+    if exp_int == 0:
+        return f"{float(base):.{precision}f}".rstrip("0").rstrip(".")
+    return f"{base} \\times 10^{{{exp_int}}}"
+
+
 class LaTeXGenerator:
     """
-    Generates and saves LaTeX documents for QHO and KSS results.
+    Generates and saves LaTeX documents for QHO, KSS, and Cyclotron results.
     """
 
     def __init__(self, export_dir: Path) -> None:
@@ -69,6 +79,7 @@ class LaTeXGenerator:
 
         e_nat  = n + 0.5
         x_tp   = sp.sqrt(2 * n + 1)
+        e_si_tex = _format_sci_latex(energy)
 
         doc = self._preamble("Quantum Harmonic Oscillator Results")
         doc += rf"""
@@ -79,9 +90,9 @@ class LaTeXGenerator:
 
 The energy eigenvalue is
 \[
-  E_{{{n}}} = \hbar\omega\!\left(n + \tfrac{{1}}{{2}}\right)
+  E_{{{n}}} = \hbar\omega\!\left({n} + \tfrac{{1}}{{2}}\right)
             = {e_nat}\,\hbar\omega
-            = {energy:.6e}~\text{{J}}.
+            = {e_si_tex}~\text{{J}}.
 \]
 
 \section{{Wavefunction in Natural Units ($\hbar = m = \omega = 1$)}}
@@ -118,6 +129,7 @@ giving
         bound_value : ħ/(4π k_B) in K·s.
         """
         doc = self._preamble("KSS Viscosity Bound in QCD")
+        bound_tex = _format_sci_latex(bound_value)
         doc += rf"""
 \begin{{document}}
 \maketitle
@@ -139,7 +151,7 @@ Using CODATA 2018 fundamental constants:
   \frac{{\hbar}}{{4\pi k_B}}
   = \frac{{1.054\,571\,817 \times 10^{{-34}}~\text{{J\,s}}}}
          {{4\pi \times 1.380\,649 \times 10^{{-23}}~\text{{J/K}}}}
-  = {bound_value:.6e}~\text{{K\,s}}.
+  = {bound_tex}~\text{{K\,s}}.
 \]
 
 \section{{Physical Significance}}
@@ -172,7 +184,8 @@ Quantum Level $n$ & Energy (nat.) & Energy (SI) & Turning Point $\pm x_{\text{tp
 \hline
 """
         for s in state_records:
-            doc += rf"{s['n']} & {s['energy_nat']:.1f}\,\hbar\omega & {s['energy']:.6e}\,\text{{J}} & \pm {s['x_tp']:.4f}\,x_0 \\" + "\n"
+            e_si_tex = _format_sci_latex(float(s["energy"]))
+            doc += rf"{s['n']} & {s['energy_nat']:.1f}\,\hbar\omega & {e_si_tex}\,\text{{J}} & \pm {s['x_tp']:.4f}\,x_0 \\" + "\n"
 
         doc += r"""\hline
 \end{tabular}
